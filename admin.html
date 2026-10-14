@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Adventskalender Admin</title>
+<meta name="theme-color" content="#0c241b">
+<meta name="robots" content="noindex">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Young+Serif&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="style.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Adventskalender Admin</h1>
+    <p>Türchen bearbeiten, Leas Fortschritt sehen, QR-Codes drucken.</p>
+  </header>
+
+  <!-- Login -->
+  <form class="panel" id="loginView" hidden>
+    <h2>Anmelden</h2>
+    <div class="field"><label for="lEmail">E-Mail</label><input type="email" id="lEmail" autocomplete="username" required></div>
+    <div class="field"><label for="lPw">Passwort</label><input type="password" id="lPw" autocomplete="current-password" required></div>
+    <button class="btn primary" type="submit">Anmelden</button>
+  </form>
+  <p class="warn" id="notAdmin" hidden>Dieses Konto hat keine Admin-Rechte. <button class="btn small" id="logout2">Abmelden</button></p>
+
+  <!-- Hauptbereich -->
+  <div id="mainView" hidden style="display:flex;flex-direction:column;gap:20px">
+    <div class="row">
+      <a class="btn primary" href="index.html#test">Kalender im Testmodus öffnen</a>
+      <button class="btn" id="qrBtn">QR-Codes drucken</button>
+      <button class="btn small" id="logout">Abmelden</button>
+    </div>
+    <div class="status" id="summary"></div>
+    <div class="panel" id="seedBox" hidden>
+      <h2>Fehlende Türchen</h2>
+      <p class="hint" id="seedText"></p>
+      <div class="row"><button class="btn primary" id="seedBtn">Mit Beispieldaten anlegen</button></div>
+    </div>
+    <div class="daylist" id="daylist"></div>
+  </div>
+</div>
+
+<!-- Editor -->
+<div class="sheet" id="sheet" hidden>
+  <form class="card" id="editForm" role="dialog" aria-modal="true" aria-labelledby="eHead" novalidate>
+    <div class="card-head">
+      <div><div class="eyebrow" id="eEyebrow"></div><h3 id="eHead"></h3></div>
+      <button class="btn small" type="button" id="eClose">Schließen</button>
+    </div>
+    <p class="warn" id="eLive" hidden></p>
+    <div class="field"><label for="eTitle">Titel</label><input type="text" id="eTitle" maxlength="80"></div>
+    <div class="field"><label for="eRiddle">Rätsel</label><textarea id="eRiddle" maxlength="1500"></textarea></div>
+    <div class="field">
+      <label for="eCoords">Koordinaten</label>
+      <input type="text" id="eCoords" placeholder="52.516275, 13.377704  oder  N 52° 30.977 E 013° 22.662" autocomplete="off">
+      <p class="hint" id="eCoordsOut">Aus Google Maps einfügen oder unten auf die Karte tippen.</p>
+    </div>
+    <div class="map" id="eMap"></div>
+    <div class="field">
+      <label for="eCode">Zahlencode (steht auch im QR-Code)</label>
+      <input type="text" id="eCode" inputmode="numeric" maxlength="20" autocomplete="off">
+      <p class="hint">Wenn du den Code änderst, musst du den QR-Code für dieses Türchen neu drucken.</p>
+    </div>
+    <div class="row">
+      <button class="btn primary" type="submit" id="eSave">Speichern</button>
+      <button class="btn" type="button" id="eCancel">Abbrechen</button>
+    </div>
+    <div class="panel" id="eProgress">
+      <h2>Fortschritt</h2>
+      <p class="hint" id="eProgText"></p>
+      <div class="row" id="eResetRow">
+        <button class="btn small" type="button" id="eReset">Fund zurücksetzen</button>
+        <span id="eResetConfirm" hidden class="row"><span class="hint">Wirklich zurücksetzen?</span>
+          <button class="btn small danger" type="button" id="eResetYes">Ja</button><button class="btn small" type="button" id="eResetNo">Nein</button></span>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- QR-Druckbogen (direktes Kind von body, damit der Druck nur ihn zeigt) -->
+<div id="printArea" hidden style="position:fixed;inset:0;z-index:20;overflow:auto;background:var(--bg)">
+  <div class="wrap">
+    <div class="row">
+      <button class="btn primary" id="printBtn">Drucken</button>
+      <button class="btn" id="printClose">Zurück</button>
+    </div>
+    <p class="hint">Tipp: Ausdrucken, ausschneiden und laminieren. Im Dezember wird es nass.</p>
+    <div class="qrsheet" id="qrSheet"></div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script type="module" src="admin.js"></script>
+</body>
+</html>

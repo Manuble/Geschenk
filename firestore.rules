@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null && request.auth.uid == "3wTztpmhJtgYYNvp0mvcr13ipX82";
+    }
+
+    // Türchen-Inhalte: erst ab ihrer Freischaltzeit lesbar (Admin jederzeit). Ändern nur Admin.
+    match /days/{day} {
+      allow get: if isAdmin() || resource.data.unlockAt <= request.time;
+      allow list, write: if isAdmin();
+    }
+
+    // Funde: lesbar für alle. Ein Fund kann nur einmal eingetragen werden.
+    // Ändern oder Löschen (Zurücksetzen) nur Admin.
+    match /progress/{day} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(["foundAt", "via"])
+                    && request.resource.data.foundAt == request.time
+                    && request.resource.data.via in ["code", "qr"];
+      allow update, delete: if isAdmin();
+    }
+  }
+}

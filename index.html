@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Leas Adventskalender</title>
+<meta name="theme-color" content="#0c241b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Adventskalender">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Young+Serif&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="style.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+<canvas id="snow" aria-hidden="true"></canvas>
+<div class="wrap">
+  <header>
+    <h1>Leas Adventskalender</h1>
+    <svg class="garland" width="220" height="18" viewBox="0 0 220 18" aria-hidden="true">
+      <path d="M2 4 Q55 18 110 4 Q165 18 218 4" fill="none" stroke="#2f8a57" stroke-width="3"/>
+      <circle cx="30" cy="10" r="4" fill="#b3262f"/><circle cx="70" cy="11" r="4" fill="#f0c45e"/>
+      <circle cx="110" cy="5" r="4" fill="#b3262f"/><circle cx="150" cy="11" r="4" fill="#f0c45e"/><circle cx="190" cy="10" r="4" fill="#b3262f"/>
+    </svg>
+    <p>Jeden Tag ein neues Türchen. Rätsel lösen, Versteck finden, Code eingeben.</p>
+  </header>
+
+  <div class="status" id="status"></div>
+
+  <section class="countdown" id="countdown" hidden>
+    <div class="cd-grid">
+      <div class="cd-cell"><b id="cdD">0</b><span>Tage</span></div>
+      <div class="cd-cell"><b id="cdH">0</b><span>Stunden</span></div>
+      <div class="cd-cell"><b id="cdM">0</b><span>Minuten</span></div>
+      <div class="cd-cell"><b id="cdS">0</b><span>Sekunden</span></div>
+    </div>
+    <p>bis zum Adventskalender</p>
+  </section>
+  <div class="grid" id="grid" aria-label="Türchen 1 bis 24"></div>
+  <div class="finale" id="finale" hidden></div>
+
+  <!-- Testmodus: nur sichtbar mit #test am Ende des Links -->
+  <section class="panel" id="testPanel" hidden aria-labelledby="tmh">
+    <h2 id="tmh">Testmodus</h2>
+    <p class="warn" id="tmAuth"></p>
+    <label class="row"><input type="checkbox" id="tmOn"> Simuliertes Datum verwenden</label>
+    <div class="row">
+      <input type="datetime-local" id="tmDate" aria-label="Simuliertes Datum" style="width:auto">
+      <button class="btn small" id="tmDec1">1. Dez</button>
+      <button class="btn small" id="tmPrev">−1 Tag</button>
+      <button class="btn small" id="tmNext">+1 Tag</button>
+    </div>
+    <label class="row"><input type="checkbox" id="tmDb"> Funde in der echten Datenbank speichern</label>
+    <p class="hint">Aus: Funde bleiben nur auf diesem Gerät (Leas Fortschritt bleibt unberührt). An: echter Ablauf, im Admin-Bereich wieder zurücksetzbar.</p>
+    <div class="row">
+      <button class="btn small" id="tmAll">Alle als gefunden markieren</button>
+      <button class="btn small" id="tmReset">Test-Fortschritt löschen</button>
+      <span id="resetConfirm" hidden class="row"><span class="hint">Wirklich löschen?</span>
+        <button class="btn small primary" id="resetYes">Ja</button><button class="btn small" id="resetNo">Nein</button></span>
+    </div>
+    <a class="btn small" href="admin.html">Zum Admin-Bereich</a>
+  </section>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+    <div class="card-head">
+      <div><div class="eyebrow" id="dEyebrow"></div><h3 id="dTitle"></h3></div>
+      <button class="btn small" id="close">Schließen</button>
+    </div>
+    <p class="riddle" id="dMsg" hidden></p>
+    <div class="body" id="dBody" hidden>
+      <p class="riddle" id="dRiddle"></p>
+      <div class="coords" id="dCoords"></div>
+      <div class="map" id="map"></div>
+      <p class="hint" id="dDist"></p>
+      <div class="row" id="dNav"></div>
+
+      <div id="solveArea" class="panel">
+        <h2>Versteck gefunden?</h2>
+        <form class="row" id="codeForm">
+          <input type="text" id="codeIn" inputmode="numeric" autocomplete="off" placeholder="Zahlencode" aria-label="Zahlencode" style="flex:1;width:auto">
+          <button class="btn primary" type="submit">Bestätigen</button>
+        </form>
+        <div class="row">
+          <button class="btn" id="scanLive" type="button">QR-Code scannen</button>
+          <label class="btn" for="qrFile">QR aus Foto</label>
+          <input type="file" id="qrFile" accept="image/*" hidden>
+        </div>
+        <video id="video" playsinline muted hidden></video>
+        <button class="btn small" id="scanStop" type="button" hidden>Scan abbrechen</button>
+      </div>
+      <div class="found-box" id="foundBox" hidden></div>
+
+      <div class="panel" id="testQr" hidden>
+        <h2>Test: QR-Code dieses Tages</h2>
+        <button class="btn small" id="showQr" type="button">QR-Code anzeigen</button>
+        <div class="qr-out" id="qrOut" hidden></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
